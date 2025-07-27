@@ -226,9 +226,11 @@ function loadGame() {
             // initializeGame() 호출 대신 직접 UI 업데이트
             nameInputContainer.style.display = 'none';
             characterImage.style.display = 'block';
-            dialogueBox.style.display = 'block';
-            choicesContainer.style.display = 'flex';
+            // dialogueBox.style.display = 'block'; // interactionContainer가 제어
+            // choicesContainer.style.display = 'flex'; // interactionContainer가 제어
             affinityBarsContainer.style.display = 'block';
+            interactionContainer.style.display = 'flex'; // interactionContainer 보이도록 설정 (추가)
+            gameContainer.style.backgroundImage = gameStory[currentState].background ? `url('assets/${gameStory[currentState].background}')` : 'none'; // 배경 이미지 적용 (추가)
 
             updateGame(false); // history에 다시 저장하지 않도록 false 전달
             updateAffinityBars();
@@ -1423,10 +1425,11 @@ function initializeGame() {
     if (gameLoaded && protagonistName) { // 저장된 게임이 있고 주인공 이름이 있으면 바로 게임 시작 화면으로
         nameInputContainer.style.display = 'none';
         characterImage.style.display = 'block';
-        dialogueBox.style.display = 'block';
+        // dialogueBox.style.display = 'block'; // interactionContainer가 제어
         // choicesContainer.style.display = 'flex'; // interactionContainer가 제어
         affinityBarsContainer.style.display = 'block';
         interactionContainer.style.display = 'flex'; // interactionContainer 보이도록 설정
+        gameContainer.style.backgroundImage = gameStory[currentState].background ? `url('assets/${gameStory[currentState].background}')` : 'none'; // 배경 이미지 적용
         // 로드된 상태로 게임 시작 (history는 이미 loadGameStateFromLocalStorage에서 불러옴)
         updateGame(false); // UI만 업데이트 (history에 중복 저장 방지)
         updateAffinityBars();
@@ -1437,7 +1440,7 @@ function initializeGame() {
     // choicesContainer.style.display = 'none'; // interactionContainer가 제어
         interactionContainer.style.display = 'none'; // interactionContainer 숨기도록 설정
         affinityBarsContainer.style.display = 'block'; // 호감도 바는 항상 보이도록
-        gameContainer.style.backgroundImage = `url('assets/backgrounds/twilight_archive.png')`; // 황혼의 서고 배경 이미지 적용
+        gameContainer.style.backgroundImage = `url('assets/backgrounds/school_gate.png')`; // 시작 화면 배경 이미지 적용 (수정)
         // 이전에 저장된 주인공 이름이 있다면 입력 필드에 미리 채워줍니다.
         const savedProtagonistName = localStorage.getItem('myVisualNovelGame') ? JSON.parse(localStorage.getItem('myVisualNovelGame')).protagonistName : "";
         if (savedProtagonistName) {
@@ -1457,10 +1460,10 @@ startGameButton.addEventListener('click', () => {
     const name = protagonistNameInput.value.trim();
     if (name) {
         protagonistName = name;
-        localStorage.clear(); // 새 게임 시작 시 로컬 스토리지 전체 초기화
+        localStorage.removeItem('myVisualNovelGame'); // 새 게임 시작 시 자동 저장 데이터만 초기화 (수정)
         nameInputContainer.style.display = 'none';
         characterImage.style.display = 'block'; // 게임 시작 시 캐릭터 이미지 보이기
-        dialogueBox.style.display = 'block'; // 게임 시작 시 대화 상자 보이기
+        // dialogueBox.style.display = 'block'; // interactionContainer가 제어
         // choicesContainer.style.display = 'flex'; // interactionContainer가 제어
         affinityBarsContainer.style.display = 'block'; // 게임 시작 시 호감도 바 보이기
         interactionContainer.style.display = 'flex'; // interactionContainer 보이도록 설정
