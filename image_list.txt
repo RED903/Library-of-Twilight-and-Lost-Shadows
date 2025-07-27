@@ -1,0 +1,42 @@
+## 필요한 이미지 파일 목록
+
+### 배경 이미지 (assets/backgrounds/ 디렉토리 안에 저장)
+
+*   `school_gate.jpg`
+*   `school_hallway_morning.jpg`
+*   `classroom.jpg`
+*   `school_hallway_lunch.jpg`
+*   `library.jpg`
+*   `school_hallway_after_class.jpg`
+*   `school_yard.jpg`
+*   `player_room_night.jpg`
+*   `art_room_door.jpg`
+*   `art_room.jpg`
+*   `student_council_room.jpg` (이 파일은 현재 스토리에서 '가정'으로 표시되어 있으므로, 직접 생성하거나 유사한 이미지를 찾아 넣으셔야 합니다.)
+*   `library_night.jpg` (이 파일은 현재 스토리에서 '가정'으로 표시되어 있으므로, 직접 생성하거나 유사한 이미지를 찾아 넣으셔야 합니다.)
+*   `library_dim_corner.jpg` (이 파일은 현재 스토리에서 '가정'으로 표시되어 있으므로, 직접 생성하거나 유사한 이미지를 찾아 넣으셔야 합니다.)
+*   `twilight_archive.jpg` (이 파일은 현재 스토리에서 '가정'으로 표시되어 있으므로, 직접 생성하거나 유사한 이미지를 찾아 넣으셔야 합니다.)
+
+### 캐릭터 이미지 (assets/characters/ 디렉토리 안에 저장)
+
+*   `ryujin_default.png`
+*   `ryujin_glare.png`
+*   `hayul_default.png`
+*   `hayul_smile.png`
+*   `hayul_sad.png`
+*   `se_a_default.png`
+*   `se_a_angry.png`
+*   `jiyu_default.png`
+*   `jiyu_concerned.png`
+*   `jiyu_smile.png`
+*   `jiyu_determined.png` (이 파일은 현재 스토리에서 '가정'으로 표시되어 있으므로, 직접 생성하거나 유사한 이미지를 찾아 넣으셔야 합니다.)
+
+---
+
+**이미지 저장 경로:**
+
+모든 이미지 파일은 `2dGame/assets/` 디렉토리 아래에 해당 종류(`characters` 또는 `backgrounds`)의 하위 디렉토리를 생성하여 저장해야 합니다.
+
+예시:
+- `2dGame/assets/backgrounds/school_gate.jpg`
+- `2dGame/assets/characters/ryujin_default.png` 
