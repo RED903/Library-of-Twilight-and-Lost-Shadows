@@ -171,7 +171,7 @@ function toggleSettingsMenu() {
 // 게임을 초기 상태로 리셋
 function resetGame() {
     if (confirm("정말로 게임을 초기화하시겠습니까? 모든 진행 상황이 삭제됩니다.")) {
-        localStorage.clear(); // 로컬 스토리지의 모든 데이터 삭제
+        localStorage.removeItem('myVisualNovelGame'); // 자동 저장 데이터만 삭제
         
         // 게임 변수들을 초기 상태로 리셋
         protagonistName = "주인공";
@@ -223,7 +223,13 @@ function loadGame() {
             adaptationFeelingType = gameState.adaptationFeelingType;
             gameStateHistory = gameState.gameStateHistory; // history도 불러오기
 
-            initializeGame(); // 게임 UI 초기화 및 로드된 상태로 업데이트
+            // initializeGame() 호출 대신 직접 UI 업데이트
+            nameInputContainer.style.display = 'none';
+            characterImage.style.display = 'block';
+            dialogueBox.style.display = 'block';
+            choicesContainer.style.display = 'flex';
+            affinityBarsContainer.style.display = 'block';
+
             updateGame(false); // history에 다시 저장하지 않도록 false 전달
             updateAffinityBars();
             alert("게임을 불러왔습니다!");
