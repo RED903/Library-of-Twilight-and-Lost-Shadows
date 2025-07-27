@@ -436,7 +436,15 @@ const gameStory = {
         ]
     },
     chapter1_scene2_ryujin_appear_extended: {
-        text: "(속으로) 검은 긴 머리에 창백한 피부. 마치 도서관의 일부인 것처럼 책에 파묻혀있는 모습이 인상적이다. 감히 말을 걸기 어려울 만큼 조용하고… 차가워 보였다.",
+        text: "",
+        character: "ryujin_default.png",
+        background: "backgrounds/library.png",
+        choices: [
+            { text: "다음", next: "chapter1_scene2_ryujin_first_talk" }
+        ]
+    },
+    chapter1_scene2_ryujin_first_talk: {
+        text: "검은 긴 머리에 창백한 피부. 마치 도서관의 일부인 것처럼 책에 파묻혀있는 모습이 인상적이다. 감히 말을 걸기 어려울 만큼 조용하고… 차가워 보였다.",
         character: "ryujin_default.png",
         background: "backgrounds/library.png",
         choices: [
@@ -546,24 +554,24 @@ const gameStory = {
         ]
     },
     chapter1_scene3_hayul_appear_extended: {
-        text: "야, 진짜 웃기지 않냐? ㅋㅋㅋㅋㅋ 내가 어제 진짜… 막 달리는데 갑자기 엉덩방아를 찧은 거야!",
-        character: "hayul_default.png",
+        text: "???:야, 진짜 웃기지 않냐? ㅋㅋㅋㅋㅋ 내가 어제 진짜… 막 달리는데 갑자기 엉덩방아를 찧은 거야!",
+        character: "",
         background: "backgrounds/school_hallway_after_class.png",
         choices: [
             { text: "다음", next: "chapter1_scene3_hayul_greeting_extended" }
         ]
     },
     chapter1_scene3_hayul_greeting_extended: {
-        text: "어? 쟤 혹시 전학생? 안녕! 아까 반에서 봤지? 난 강하율이야! 체육부 소속! 너 혹시 지금 집에 가는 길이야?",
+        text: "어? 쟤 혹시 전학생? 안녕! 아까 반에서 봤지? 난 강하율이야! 체육부 소속! 너 혹시 지금 집에 가는 길이야? 같이 나갈래?",
         character: "hayul_default.png",
         background: "backgrounds/school_hallway_after_class.png",
         choices: [
-            { text: "아, 안녕! [주인공 이름]이야. 좋지! 같이 갈래?", next: "chapter1_scene3_go_with_hayul_extended", favorabilityChange: { hayul: 5 } },
+            { text: "아, 안녕! [주인공 이름]이야. 좋지! 같이 나갈까?", next: "chapter1_scene3_go_with_hayul_extended", favorabilityChange: { hayul: 5 } },
             { text: "미안, 좀 피곤해서… 다음에 같이 가자.", next: "chapter1_scene3_decline_hayul_extended", favorabilityChange: { hayul: -3 } }
         ]
     },
     chapter1_scene3_go_with_hayul_extended: {
-        text: "오예! 그럼 같이 가자! 내가 학교 근처 맛집도 알려줄게! 걸어가면서 얘기하면 시간 금방 갈 거야!",
+        text: "오예! 그럼 같이 나가자! 내가 학교 근처 맛집도 알려줄게! 걸어가면서 얘기하면 시간 금방 갈 거야!",
         character: "hayul_smile.png",
         background: "backgrounds/school_yard.png",
         choices: [
@@ -606,7 +614,7 @@ const gameStory = {
     },
     chapter1_scene3_ignore_shadow_extended: {
         text: "왠지 모르게 말하기가 꺼려졌다. 괜히 하율이까지 불안하게 만들고 싶지 않았다. 하지만 나조차 불안해지는 건 어쩔 수 없었다.",
-        character: "",
+        character: "hayul_default.png",
         background: "backgrounds/school_yard.png",
         choices: [
             { text: "다음", next: "chapter1_scene3_shadow_effect" }
@@ -622,7 +630,7 @@ const gameStory = {
     },
     chapter1_scene3_shadow_effect: {
         text: "(속으로) 방금 그건… 정말 뭐였지? 바람? 그림자? 아니면… 또 착각? 머리가… 조금 아파왔다.",
-        character: "",
+        character: "hayul_default.png",
         background: "backgrounds/school_yard.png",
         choices: [
             { text: "다음", next: "chapter1_scene3_hayul_uncertainty_extended" }
@@ -638,7 +646,7 @@ const gameStory = {
     },
     chapter1_scene3_end_extended: {
         text: "하율이는 밝게 웃었지만, 그녀의 눈빛에는 묘한 불안감이 스쳐 지나갔다. 이 학교… 단순히 오래된 것뿐 아니라, 뭔가 숨겨진 비밀이 있는 걸까? 방금 그 통증은 뭐였지?",
-        character: "",
+        character: "hayul_default.png",
         background: "backgrounds/school_yard.png",
         choices: [
             { text: "다음", next: "chapter1_scene3_farewell_hayul" }
@@ -657,10 +665,18 @@ const gameStory = {
         character: "",
         background: "backgrounds/player_room_night.png",
         choices: [
-            { text: "다음 씬으로", next: "chapter1_scene4_start_extended" }
+            { text: "다음 씬으로", next: "chapter1_scene4_start" }
         ]
     },
     // 씬 4: 교내 순찰, 도도한 학생회장 윤세아 (확장된 씬)
+    chapter1_scene4_start: {
+        text: "다음날..",
+        character: "",
+        background: "backgrounds/player_room_night.png",
+        choices: [
+            { text: "다음", next: "chapter1_scene4_sea_appear_extended" }
+        ]
+    },
     chapter1_scene4_start_extended: {
         text: "어제 하율이와 나눴던 이야기가 계속 머릿속에 맴돌았다. 사라진 기억, 이상한 소문, 그리고 내가 느꼈던 싸늘한 기운까지. 단순히 우연이라고 치부하기엔 너무 많은 일들이 일어나는 것 같았다.",
         character: "",
@@ -737,6 +753,14 @@ const gameStory = {
         ]
     },
     chapter1_scene5_jiyu_appear_extended: {
+        text: "",
+        character: "jiyu_default.png",
+        background: "backgrounds/art_room_door.png", // 방과 후 학교 복도 이미지
+        choices: [
+            { text: "다음", next: "chapter1_scene5_jiyu_first_talk" }
+        ]
+    },
+    chapter1_scene5_jiyu_first_talk: {
         text: "어라? 나왔다. 근데 표정이 왜 저러지? 꼭 꿈을 꾸는 사람 같아.",
         character: "jiyu_default.png",
         background: "backgrounds/art_room_door.png",
@@ -881,7 +905,7 @@ const gameStory = {
         ]
     },
     chapter2_scene1_hallway_students: {
-        text: "야, 너 진짜 기억 안 나? 어제 우리 반 철수, 아침에 오자마자 자기가 제일 아끼던 게임기 어디다 뒀는지 통 기억을 못 한대! 분명 어제까지 자기 침대 옆에 뒀다고 했는데… 아예 까맣게 잊었대. 자기가 게임기를 가지고 있었다는 사실 자체도 헷갈려 하고.",
+        text: "???:야, 너 진짜 기억 안 나? 어제 우리 반 철수, 아침에 오자마자 자기가 제일 아끼던 게임기 어디다 뒀는지 통 기억을 못 한대! 분명 어제까지 자기 침대 옆에 뒀다고 했는데… 아예 까맣게 잊었대. 자기가 게임기를 가지고 있었다는 사실 자체도 헷갈려 하고.",
         character: "", // 남학생들 대화 (이미지 없음)
         background: "backgrounds/school_hallway_morning.png",
         choices: [
@@ -889,7 +913,7 @@ const gameStory = {
         ]
     },
     chapter2_scene1_hallway_students_2: {
-        text: "진짜? 완전 심각하네. 우리 반 수진이도 어제 아침에 뭘 먹었는지 기억 안 난다고 했었는데… 뭐야, 이거 진짜 심상치 않잖아? 우리 반에도 벌써 두 명째야.",
+        text: "???:진짜? 완전 심각하네. 우리 반 수진이도 어제 아침에 뭘 먹었는지 기억 안 난다고 했었는데… 뭐야, 이거 진짜 심상치 않잖아? 우리 반에도 벌써 두 명째야.",
         character: "", // 남학생들 대화 (이미지 없음)
         background: "backgrounds/school_hallway_morning.png",
         choices: [
@@ -897,7 +921,7 @@ const gameStory = {
         ]
     },
     chapter2_scene1_hallway_students_3: {
-        text: "우리 언니도 어제 자기가 보던 드라마 내용이 하나도 기억 안 난다고 난리더라니까? 분명 어제 밤에 다 봤다고 했는데, 내용이 통 기억이 안 난대.",
+        text: "???:우리 언니도 어제 자기가 보던 드라마 내용이 하나도 기억 안 난다고 난리더라니까? 분명 어제 밤에 다 봤다고 했는데, 내용이 통 기억이 안 난대.",
         character: "", // 여학생 대화 (이미지 없음)
         background: "backgrounds/school_hallway_morning.png",
         choices: [
@@ -906,7 +930,7 @@ const gameStory = {
     },
     chapter2_scene1_hayul_appear: {
         text: "(속으로) 기억 소실… 하율이가 말했던 현상이었다. 점점 더 많은 학생들이 겪고 있나 보다. 단순한 소문이 아니었어. 이건… 분명히 뭔가 심각한 일이 벌어지고 있다는 증거였다.",
-        character: "hayul_default.png",
+        character: "",
         background: "backgrounds/classroom.png",
         choices: [
             { text: "다음", next: "chapter2_scene1_hayul_greeting" }
@@ -1045,7 +1069,7 @@ const gameStory = {
     },
     chapter2_scene2_twilight_archive_question: {
         text: "'황혼의 서고'요? 그게 어딘데요? 제가 알기로 도서관 끝은 막힌 벽인데요…",
-        character: "",
+        character: "ryujin_default.png",
         background: "backgrounds/library.png",
         choices: [
             { text: "다음", next: "chapter2_scene2_twilight_archive_location" }
@@ -1176,7 +1200,7 @@ const gameStory = {
         ]
     },
     chapter2_scene4_sea_discover_protagonist: {
-        text: "무슨 일입니까? 학생회장실 근처에서 서성이는 것은 금지되어 있습니다. 개인적인 공간이니 함부로 접근하지 마십시오.",
+        text: "[주인공 이름]? 무슨 일입니까? 학생회장실 근처에서 서성이는 것은 금지되어 있습니다. 개인적인 공간이니 함부로 접근하지 마십시오.",
         character: "se_a_default.png",
         background: "backgrounds/student_council_room.png",
         choices: [
@@ -1197,7 +1221,7 @@ const gameStory = {
         character: "",
         background: "backgrounds/school_hallway_after_class.png",
         choices: [
-            { text: "다음 씬으로", next: "chapter2_scene5_start" } // 윤세아와 엮이지 않을 경우 다음 씬으로 연결 (예시)
+            { text: "다음 씬으로", next: "chapter2_scene5_twilight_archive_start" } // 윤세아와 엮이지 않을 경우 다음 씬으로 연결 (예시)
         ]
     },
     chapter2_scene4_sea_offer_cooperation: {
