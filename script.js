@@ -14,6 +14,7 @@ const settingsOverlay = document.getElementById('settings-overlay'); // 새로 �
 const saveGameButton = document.getElementById('save-game-button'); // 새로 추가된 요소
 const loadGameButton = document.getElementById('load-game-button'); // 새로 추가된 요소
 const interactionContainer = document.getElementById('interaction-container'); // 새로 추가된 요소
+const startScreen = document.getElementById('start-screen'); // 새로 추가된 요소
 
 let protagonistName = "주인공"; // 기본값 설정
 let favorability = { ryujin: 0, hayul: 0, sea: 0, jiyu: 0, mysteryInterest: 0 }; // 캐릭터별 호감도 초기화 (teacher 제거)
@@ -246,6 +247,133 @@ function loadGame() {
     }
 }
 
+let currentState = 'chapter1_scene1_new_morning_start'; // 게임 시작점을 새로운 씬으로 변경
+
+function updateGame(saveToHistory = true) { // saveToHistory 매개변수 추가
+    console.log("Current State:", currentState);
+
+    if (saveToHistory) {
+        saveCurrentStateToHistory(); // 매개변수에 따라 history에 저장
+    }
+
+    const currentScene = gameStory[currentState];
+    let displayText;
+    if (typeof currentScene.text === 'function') {
+        displayText = currentScene.text();
+    } else {
+        displayText = currentScene.text;
+    }
+    displayText = displayText.replace(/\[주인공 이름\]/g, protagonistName); // 주인공 이름 대체
+    dialogueText.textContent = displayText;
+    characterImage.src = currentScene.character ? `assets/characters/${currentScene.character}` : '';
+    characterImage.alt = currentScene.character ? '캐릭터 이미지' : '';
+    gameContainer.style.backgroundImage = currentScene.background ? `url('assets/${currentScene.background}')` : 'none'; // 배경 이미지 적용
+
+    choicesContainer.style.display = 'none'; // 선택지 버튼 컨테이너를 먼저 숨깁니다.
+    choicesContainer.innerHTML = ''; // 기존 선택지 버튼들을 지웁니다.
+    currentScene.choices.forEach(choice => {
+        const button = document.createElement('button');
+        button.classList.add('choice-button');
+        button.textContent = choice.text.replace(/\[주인공 이름\]/g, protagonistName); // 선택지 텍스트에도 이름 대체
+        button.onclick = () => {
+            console.log("Button clicked! Next scene:", choice.next, "Choice text:", choice.text); // 디버깅용 로그 추가
+            // onChoose 액션 실행 (자기소개 타입 설정 등)
+            if (choice.onChoose) {
+                choice.onChoose();
+            }
+            // 호감도 변경 적용
+            if (choice.favorabilityChange) {
+                for (const char in choice.favorabilityChange) {
+                    favorability[char] += choice.favorabilityChange[char];
+                    console.log(`${char} 호감도: ${favorability[char]}`); // 개발용: 호감도 변화 콘솔 출력
+                }
+                updateAffinityBars(); // 호감도 변경 시 바 업데이트
+            }
+            currentState = choice.next;
+            // 다음 씬으로 넘어가기 전에 선택지들을 페이드 아웃시키고, 완전히 사라지면 다음 씬으로 전환
+            Array.from(choicesContainer.children).forEach(button => {
+                button.style.opacity = '0';
+            });
+            setTimeout(() => {
+                choicesContainer.style.display = 'none'; // 모든 버튼이 사라지면 컨테이너 숨기기
+                updateGame(); // 다음 씬으로 넘어갈 때 saveToHistory는 기본값(true) 유지
+            }, 500); // CSS transition 시간 (0.5초)과 동일하게 설정
+        };
+        choicesContainer.appendChild(button);
+        // 버튼 생성 후 페이드 인 효과 적용 (여기서는 이미 opacity 0이므로 setTimeout으로 1로 변경)
+        setTimeout(() => {
+            button.style.opacity = '1';
+        }, 50); // 약간의 지연 후 opacity를 1로 설정하여 전환 효과 발동
+    });
+    // 모든 선택지 버튼이 추가된 후 choicesContainer를 다시 보이게 함
+    choicesContainer.style.display = 'flex'; // 선택지 버튼 컨테이너를 다시 보이게 합니다.
+    saveLatestGameStateToLocalStorage(); // 항상 최신 상태를 localStorage에 저장
+}
+
+// 초기 게임 시작 화면 설정
+function initializeGame() {
+    const gameLoaded = loadGameStateFromLocalStorage();
+
+    if (gameLoaded && protagonistName) { // 저장된 게임이 있고 주인공 이름이 있으면 바로 게임 시작 화면으로
+        startScreen.style.display = 'none';
+        nameInputContainer.style.display = 'none';
+        characterImage.style.display = 'block';
+        affinityBarsContainer.style.display = 'block';
+        interactionContainer.style.display = 'flex';
+        gameContainer.style.backgroundImage = gameStory[currentState].background ? `url('assets/${gameStory[currentState].background}')` : 'none';
+        updateGame(false);
+        updateAffinityBars();
+    } else { // 저장된 게임이 없거나 주인공 이름이 없으면 시작 화면 표시
+        startScreen.style.display = 'flex';
+        nameInputContainer.style.display = 'none';
+        characterImage.style.display = 'none';
+        interactionContainer.style.display = 'none';
+        affinityBarsContainer.style.display = 'none'; // 시작 화면에서는 호감도 바 숨김
+        gameContainer.style.backgroundImage = `url('assets/backgrounds/1e819f8d-741b-4718-bc8d-82ebfdf112c0.png')`; // 시작 화면 배경 이미지 적용 (수정)
+        // 초기 시작 상태를 history에 저장
+        currentState = 'chapter1_scene1_new_morning_start'; // 초기 씬 설정
+        gameStateHistory = []; // history 초기화
+        saveCurrentStateToHistory(); // history에 첫 상태 추가
+    }
+    isSettingsMenuOpen = false;
+    updateBackButtonVisibility();
+}
+
+// 게임 시작 버튼 이벤트 리스너
+startGameButton.addEventListener('click', () => {
+    const name = protagonistNameInput.value.trim();
+    if (name) {
+        protagonistName = name;
+        localStorage.removeItem('myVisualNovelGame'); // 새 게임 시작 시 자동 저장 데이터만 초기화 (수정)
+        nameInputContainer.style.display = 'none';
+        characterImage.style.display = 'block'; // 게임 시작 시 캐릭터 이미지 보이기
+        // dialogueBox.style.display = 'block'; // interactionContainer가 제어
+        // choicesContainer.style.display = 'flex'; // interactionContainer가 제어
+        affinityBarsContainer.style.display = 'block'; // 게임 시작 시 호감도 바 보이기
+        interactionContainer.style.display = 'flex'; // interactionContainer 보이도록 설정
+        
+        // 게임 시작 시 history 초기화 및 첫 상태 저장
+        gameStateHistory = []; // 새로운 게임 시작 시 history 초기화
+        currentState = 'chapter1_scene1_new_morning_start'; // 첫 씬으로 설정
+        updateGame(); // 게임 시작 (자동으로 history에 첫 상태 저장)
+        updateAffinityBars();
+        // saveLatestGameStateToLocalStorage(); // updateGame에서 처리
+    } else {
+        alert("주인공 이름을 입력해주세요!");
+    }
+});
+
+// 시작 화면 클릭 이벤트 리스너
+startScreen.addEventListener('click', () => {
+    startScreen.style.display = 'none';
+    nameInputContainer.style.display = 'flex';
+    gameContainer.style.backgroundImage = `url('assets/backgrounds/school_gate.png')`; // 이름 입력 화면 배경 설정
+    // 이전에 저장된 주인공 이름이 있다면 입력 필드에 미리 채워줍니다.
+    const savedProtagonistName = localStorage.getItem('myVisualNovelGame') ? JSON.parse(localStorage.getItem('myVisualNovelGame')).protagonistName : "";
+    if (savedProtagonistName) {
+        protagonistNameInput.value = savedProtagonistName;
+    }
+});
 
 // 게임 스토리 데이터
 const gameStory = {
@@ -397,7 +525,7 @@ const gameStory = {
         character: "",
         background: "backgrounds/classroom.png",
         choices: [
-            { text: "다음 씬으로", next: "chapter1_scene2_lunch_start" }
+            { text: "다음", next: "chapter1_scene2_lunch_start" }
         ]
     },
     // 씬 2: 점심시간, 도서관에서의 첫 만남 (류진) (확장된 씬)
@@ -549,7 +677,7 @@ const gameStory = {
         character: "",
         background: "backgrounds/library.png", // 점심시간 후 교실로 돌아오는 배경
         choices: [
-            { text: "다음 씬으로", next: "chapter1_scene3_start_extended" }
+            { text: "다음", next: "chapter1_scene3_start_extended" }
         ]
     },
     // 씬 3: 방과 후, 첫 미스터리 현상과 강하율 (확장된 씬)
@@ -591,13 +719,29 @@ const gameStory = {
         character: "hayul_sad.png",
         background: "backgrounds/school_hallway_after_class.png",
         choices: [
-            { text: "다음 씬으로", next: "chapter1_scene4_start_extended" }
+            { text: "다음", next: "chapter1_scene3_decline_hayul_deny" }
+        ]
+    },
+    chapter1_scene3_decline_hayul_deny: {
+        text: "",
+        character: "",
+        background: "backgrounds/school_gate_afternoon.png",
+        choices: [
+            { text: "다음", next: "chapter1_scene3_decline_hayul_after_deny" }
+        ]
+    },
+    chapter1_scene3_decline_hayul_after_deny: {
+        text: "방금 그건… 정말 뭐였지? 바람? 그림자? 아니면… 또 착각? 머리가… 조금 아파왔다.",
+        character: "",
+        background: "backgrounds/school_gate_afternoon.png",
+        choices: [
+            { text: "다음", next: "chapter1_scene3_walk_home_alone" }
         ]
     },
     chapter1_scene3_walk_with_hayul_extended: {
         text: "그나저나 요즘 학교가 좀 이상해. 우리 반 애가 말이야, 자기가 제일 아끼던 축구공을 어디다 뒀는지 통 기억을 못 하는 거야! 분명 어제까지 자기 책상 밑에 뒀다고 하는데… 아예 까맣게 잊었대. 자기가 축구공을 가지고 있었다는 사실 자체도 헷갈려 하고.",
         character: "hayul_default.png",
-        background: "backgrounds/school_yard.png",
+        background: "backgrounds/school_gate_afternoon.png",
         choices: [
             { text: "어? 그런 일이 있었어? 심각한데?", next: "chapter1_scene3_hayul_mystery_2_extended" }
         ]
@@ -605,7 +749,7 @@ const gameStory = {
     chapter1_scene3_hayul_mystery_2_extended: {
         text: "응! 신기하지 않아? 심지어 얼마 전에는 미술부 선배가 자기 그림을 그리다가 갑자기 모든 걸 잊어버렸다고 한 적도 있어. 막 자기 작업실에 들어갔는데 자기가 뭘 하려 했는지 까맣게 잊었대나? (주인공에게 고개를 기울이며) 너도 혹시 그런 경험 있어? 뭔가 해야 할 일을 갑자기 잊어버린다거나…",
         character: "hayul_default.png",
-        background: "backgrounds/school_yard.png",
+        background: "backgrounds/school_gate_afternoon.png",
         choices: [
             { text: "방금… 뭔가 지나간 것 같은데? 나도 어딘가 싸늘한 기운을 느낀 것 같아.", next: "chapter1_scene3_ask_about_shadow_extended", favorabilityChange: { hayul: 2 } },
             { text: "음… 딱히 그런 적은 없는 것 같아. (괜히 불안하게 만들고 싶지 않아 얼버무린다)", next: "chapter1_scene3_ignore_shadow_extended", favorabilityChange: { hayul: -1 } },
@@ -615,7 +759,7 @@ const gameStory = {
     chapter1_scene3_ask_about_shadow_extended: {
         text: "어? 진짜? 난 아무것도 못 봤는데… 으음, 바람이 좀 세게 부네! 너 기분 탓 아닐까?",
         character: "hayul_default.png",
-        background: "backgrounds/school_yard.png",
+        background: "backgrounds/school_gate_afternoon.png",
         choices: [
             { text: "다음", next: "chapter1_scene3_shadow_effect" }
         ]
@@ -623,7 +767,7 @@ const gameStory = {
     chapter1_scene3_ignore_shadow_extended: {
         text: "왠지 모르게 말하기가 꺼려졌다. 괜히 하율이까지 불안하게 만들고 싶지 않았다. 하지만 나조차 불안해지는 건 어쩔 수 없었다.",
         character: "hayul_default.png",
-        background: "backgrounds/school_yard.png",
+        background: "backgrounds/school_gate_afternoon.png",
         choices: [
             { text: "다음", next: "chapter1_scene3_shadow_effect" }
         ]
@@ -631,7 +775,7 @@ const gameStory = {
     chapter1_scene3_ask_rumor_mystery: {
         text: "오! 너도 그런 소문 들었어? 맞아, 그런 말도 있더라. 학교 도서관 깊숙한 곳에 뭔가 비밀이 숨겨져 있다던가? 하하, 설마 진짜겠어?",
         character: "hayul_default.png",
-        background: "backgrounds/school_yard.png",
+        background: "backgrounds/school_gate_afternoon.png",
         choices: [
             { text: "다음", next: "chapter1_scene3_shadow_effect" }
         ]
@@ -639,7 +783,7 @@ const gameStory = {
     chapter1_scene3_shadow_effect: {
         text: "(속으로) 방금 그건… 정말 뭐였지? 바람? 그림자? 아니면… 또 착각? 머리가… 조금 아파왔다.",
         character: "hayul_default.png",
-        background: "backgrounds/school_yard.png",
+        background: "backgrounds/school_gate_afternoon.png",
         choices: [
             { text: "다음", next: "chapter1_scene3_hayul_uncertainty_extended" }
         ]
@@ -647,7 +791,7 @@ const gameStory = {
     chapter1_scene3_hayul_uncertainty_extended: {
         text: "뭐지? 갑자기 왜 이렇게 춥지? 으으, 소름 돋았어! 빨리 집에 가자! 감기 걸리겠네!",
         character: "hayul_default.png",
-        background: "backgrounds/school_yard.png",
+        background: "backgrounds/school_gate_afternoon.png",
         choices: [
             { text: "다음", next: "chapter1_scene3_end_extended" }
         ]
@@ -655,7 +799,7 @@ const gameStory = {
     chapter1_scene3_end_extended: {
         text: "하율이는 밝게 웃었지만, 그녀의 눈빛에는 묘한 불안감이 스쳐 지나갔다. 이 학교… 단순히 오래된 것뿐 아니라, 뭔가 숨겨진 비밀이 있는 걸까? 방금 그 통증은 뭐였지?",
         character: "hayul_default.png",
-        background: "backgrounds/school_yard.png",
+        background: "backgrounds/school_gate_afternoon.png",
         choices: [
             { text: "다음", next: "chapter1_scene3_farewell_hayul" }
         ]
@@ -663,9 +807,9 @@ const gameStory = {
     chapter1_scene3_farewell_hayul: {
         text: "그럼 내일 봐! 조심해서 가!",
         character: "hayul_default.png",
-        background: "backgrounds/school_gate.png",
+        background: "backgrounds/school_gate_afternoon.png",
         choices: [
-            { text: "그래, 하율이도 조심해서 가.", next: "chapter1_scene3_walk_home_alone" }
+            { text: "그래, 너도 조심해서 가.", next: "chapter1_scene3_walk_home_alone" }
         ]
     },
     chapter1_scene3_walk_home_alone: {
@@ -673,14 +817,14 @@ const gameStory = {
         character: "",
         background: "backgrounds/player_room_night.png",
         choices: [
-            { text: "다음 씬으로", next: "chapter1_scene4_start" }
+            { text: "다음날...", next: "chapter1_scene4_start" }
         ]
     },
     // 씬 4: 교내 순찰, 도도한 학생회장 윤세아 (확장된 씬)
     chapter1_scene4_start: {
-        text: "다음날..",
+        text: "다음날...",
         character: "",
-        background: "backgrounds/player_room_night.png",
+        background: "backgrounds/school_gate_afternoon.png.png",
         choices: [
             { text: "다음", next: "chapter1_scene4_sea_appear_extended" }
         ]
@@ -748,7 +892,7 @@ const gameStory = {
         character: "",
         background: "backgrounds/school_hallway_after_class.png",
         choices: [
-            { text: "다음 씬으로", next: "chapter1_scene5_start_extended" }
+            { text: "다음", next: "chapter1_scene5_start_extended" }
         ]
     },
     // 씬 5: 미술실의 엉뚱한 선배, 이지유 (확장된 씬)
@@ -790,7 +934,7 @@ const gameStory = {
         character: "",
         background: "backgrounds/art_room_door.png",
         choices: [
-            { text: "다음 씬으로", next: "chapter1_scene6_start" }
+            { text: "다음", next: "chapter1_scene6_start" }
         ]
     },
     chapter1_scene5_jiyu_grab_extended: {
@@ -824,7 +968,16 @@ const gameStory = {
         character: "jiyu_smile.png",
         background: "backgrounds/art_room.png",
         choices: [
-            { text: "다음", next: "chapter1_scene5_end_extended" }
+            { text: "다음", next: "chapter1_scene5_jiyu_deeper_mystery_talk" }
+        ]
+    },
+    chapter1_scene5_jiyu_deeper_mystery_talk: {
+        text: "그런데 말이야, 요즘 들어 그 보이지 않는 **영감**이 너무 강해지고 있어. 마치 뭔가가… 이 학교를 뒤덮으려는 것처럼. 너도 느껴지지 않아? 그… 희미한 **그림자** 같은 거.",
+        character: "jiyu_concerned.png",
+        background: "backgrounds/art_room.png",
+        choices: [
+            { text: "왠지 모르게 저도 그런 느낌을 받긴 했어요.", next: "chapter1_scene5_jiyu_transition_to_farewell", favorabilityChange: { jiyu: 2 } }, // 새로운 전환 씬 추가
+            { text: "글쎄요. 저는 잘 모르겠는데요.", next: "chapter1_scene5_jiyu_transition_to_farewell", favorabilityChange: { jiyu: -1 } } // 새로운 전환 씬 추가
         ]
     },
     chapter1_scene5_jiyu_art_room_secret_end: {
@@ -836,11 +989,37 @@ const gameStory = {
         ]
     },
     chapter1_scene5_jiyu_ask_memory_loss: {
-        text: "…어떻게 알았지? 너도 봤어? 그… 검은 그림자 같은 거? 난 그걸 그림으로 그렸는데… 그리고 나서 중요한 걸 잊어버렸어. 아주 중요한 걸… 도대체 뭘까? 그게… 내 기억을 가져간 걸까…?",
+        text: "…어떻게 알았지? 너도 봤어? 그… **검은 그림자** 같은 거? 난 그걸 그림으로 그렸는데… 그리고 나서 중요한 걸 잊어버렸어. 아주 중요한 걸… 도대체 뭘까? 그게… 내 **기억**을 가져간 걸까…?",
         character: "jiyu_concerned.png",
-        background: "backgrounds/art_room_door.png",
+        background: "backgrounds/art_room.png",
         choices: [
-            { text: "다음", next: "chapter1_scene5_end_extended" }
+            { text: "다음", next: "chapter1_scene5_jiyu_memory_loss_deep_dive" }
+        ]
+    },
+    chapter1_scene5_jiyu_memory_loss_deep_dive: {
+        text: "점점 더 많은 학생들이 이상한 **기억 상실**을 겪고 있어. 어쩌면 그 **그림자**가… 우리의 기억뿐만 아니라, 이 학교의 중요한 **진실**까지 삼키고 있는지도 몰라. [주인공 이름], 너는… 이 미스터리를 함께 풀어갈 **용기**가 있어?",
+        character: "jiyu_default.png",
+        background: "backgrounds/art_room.png",
+        choices: [
+            { text: "네, 선배와 함께라면요.", next: "chapter1_scene5_jiyu_transition_to_farewell", favorabilityChange: { jiyu: 3, mysteryInterest: 2 } }, // 새로운 전환 씬 추가
+            { text: "솔직히… 좀 무섭네요.", next: "chapter1_scene5_jiyu_transition_to_farewell", favorabilityChange: { jiyu: -1 } } // 새로운 전환 씬 추가
+        ]
+    },
+    // --- 새로운 씬 추가: 대화 마무리 및 전환점 ---
+    chapter1_scene5_jiyu_transition_to_farewell: {
+        text: "이지유 선배의 눈빛에서 왠지 모를 불안감과 함께 결연한 의지가 느껴졌다.", // 주인공 내레이션이나 상황 설명 추가
+        character: "jiyu_smile.png", // 또는 다른 감정 표현
+        background: "backgrounds/art_room.png", // 미술실 배경 유지
+        choices: [
+            { text: "다음", next: "chapter1_scene5_jiyu_farewell" }
+        ]
+    },
+    chapter1_scene5_jiyu_farewell: {
+        text: "시간이 늦었네. 오늘 얘기 즐거웠어, [주인공 이름]. 내일 또 봐. 조심해서 가.", // 이지유가 먼저 인사를 건네는 느낌
+        character: "jiyu_smile.png",
+        background: "backgrounds/school_hallway_after_class.png", // 복도로 전환
+        choices: [
+            { text: "다음 씬으로", next: "chapter1_scene5_end_extended" }
         ]
     },
     chapter1_scene5_end_extended: {
@@ -874,7 +1053,7 @@ const gameStory = {
         character: "",
         background: "backgrounds/player_room_night.png",
         choices: [
-            { text: "챕터 1 종료", next: "chapter1_end" }
+            { text: "다음", next: "chapter1_end" }
         ]
     },
     chapter1_scene6_stay_normal: {
@@ -882,7 +1061,7 @@ const gameStory = {
         character: "",
         background: "backgrounds/player_room_night.png",
         choices: [
-            { text: "챕터 1 종료", next: "chapter1_end" }
+            { text: "다음", next: "chapter1_end" }
         ]
     },
     chapter1_end: {
@@ -981,7 +1160,7 @@ const gameStory = {
         character: "",
         background: "backgrounds/classroom.png",
         choices: [
-            { text: "다음 씬으로", next: "chapter2_scene2_library_call_start" } // 챕터 2의 다음 씬으로 연결
+            { text: "다음", next: "chapter2_scene2_library_call_start" } // 챕터 2의 다음 씬으로 연결
         ]
     },
     // 씬 2: 도서관의 호출 (확장된 씬)
@@ -1088,7 +1267,7 @@ const gameStory = {
         character: "ryujin_default.png",
         background: "backgrounds/library.png",
         choices: [
-            { text: "다음 씬으로", next: "chapter2_scene2_end" } // 챕터 2의 씬 2 종료
+            { text: "다음", next: "chapter2_scene2_end" } // 챕터 2의 씬 2 종료
         ]
     },
     chapter2_scene2_end: {
@@ -1096,7 +1275,7 @@ const gameStory = {
         character: "",
         background: "backgrounds/library.png",
         choices: [
-            { text: "다음 씬으로", next: "chapter2_scene3_art_room_start" } // 챕터 2의 다음 씬으로 연결
+            { text: "다음", next: "chapter2_scene3_art_room_start" } // 챕터 2의 다음 씬으로 연결
         ]
     },
     // 씬 3: 사라진 그림의 미스터리 (확장된 씬)
@@ -1130,7 +1309,7 @@ const gameStory = {
         character: "",
         background: "backgrounds/school_hallway_after_class.png",
         choices: [
-            { text: "다음 씬으로", next: "chapter2_scene4_sea_start" } // 이지유와 엮이지 않을 경우 다음 씬으로 연결
+            { text: "다음", next: "chapter2_scene4_sea_start" } // 이지유와 엮이지 않을 경우 다음 씬으로 연결
         ]
     },
     chapter2_scene3_jiyu_lost_painting: {
@@ -1179,7 +1358,7 @@ const gameStory = {
         character: "jiyu_determined.png", // 새로운 이지유 표정 (결연한) 추가 (가정)
         background: "backgrounds/art_room.png",
         choices: [
-            { text: "다음 씬으로", next: "chapter2_scene3_end" }
+            { text: "다음", next: "chapter2_scene3_end" }
         ]
     },
     chapter2_scene3_end: {
@@ -1187,7 +1366,7 @@ const gameStory = {
         character: "",
         background: "backgrounds/art_room.png",
         choices: [
-            { text: "다음 씬으로", next: "chapter2_scene4_sea_start" } // 챕터 2의 다음 씬으로 연결
+            { text: "다음", next: "chapter2_scene4_sea_start" } // 챕터 2의 다음 씬으로 연결
         ]
     },
     // 씬 4: 윤세아의 경계와 제안 (확장된 씬)
@@ -1229,7 +1408,7 @@ const gameStory = {
         character: "",
         background: "backgrounds/school_hallway_after_class.png",
         choices: [
-            { text: "다음 씬으로", next: "chapter2_scene5_twilight_archive_start" } // 윤세아와 엮이지 않을 경우 다음 씬으로 연결 (예시)
+            { text: "다음", next: "chapter2_scene5_twilight_archive_start" } // 윤세아와 엮이지 않을 경우 다음 씬으로 연결 (예시)
         ]
     },
     chapter2_scene4_sea_offer_cooperation: {
@@ -1262,7 +1441,7 @@ const gameStory = {
         character: "",
         background: "backgrounds/school_hallway_after_class.png",
         choices: [
-            { text: "다음 씬으로", next: "chapter2_scene5_twilight_archive_start" } // 챕터 2의 다음 씬으로 연결
+            { text: "다음", next: "chapter2_scene5_twilight_archive_start" } // 챕터 2의 다음 씬으로 연결
         ]
     },
     // 씬 5: 황혼의 서고로의 첫 발 (확장된 씬)
@@ -1344,140 +1523,16 @@ const gameStory = {
         character: "",
         background: "backgrounds/twilight_archive.png",
         choices: [
-            { text: "게임 종료", next: "chapter2_end_game" } // 챕터 2 종료 후 게임 종료 씬으로 연결 (예시)
+            { text: "챕터 2 종료", next: "chapter2_end_game" } // 챕터 2 종료 후 게임 종료 씬으로 연결 (예시)
         ]
     },
     chapter2_end_game: {
-        text: "게임이 종료되었습니다. 플레이해주셔서 감사합니다!",
+        text: "계속하려면 코드를 입력하세요",
         character: "",
         background: "backgrounds/player_room_night.png",
         choices: []
     }
 };
-
-let currentState = 'chapter1_scene1_new_morning_start'; // 게임 시작점을 새로운 씬으로 변경
-
-function updateGame(saveToHistory = true) { // saveToHistory 매개변수 추가
-    console.log("Current State:", currentState);
-
-    if (saveToHistory) {
-        saveCurrentStateToHistory(); // 매개변수에 따라 history에 저장
-    }
-
-    const currentScene = gameStory[currentState];
-    let displayText;
-    if (typeof currentScene.text === 'function') {
-        displayText = currentScene.text();
-    } else {
-        displayText = currentScene.text;
-    }
-    displayText = displayText.replace(/\[주인공 이름\]/g, protagonistName); // 주인공 이름 대체
-    dialogueText.textContent = displayText;
-    characterImage.src = currentScene.character ? `assets/characters/${currentScene.character}` : '';
-    characterImage.alt = currentScene.character ? '캐릭터 이미지' : '';
-    gameContainer.style.backgroundImage = currentScene.background ? `url('assets/${currentScene.background}')` : 'none'; // 배경 이미지 적용
-
-    choicesContainer.style.display = 'none'; // 선택지 버튼 컨테이너를 먼저 숨깁니다.
-    choicesContainer.innerHTML = ''; // 기존 선택지 버튼들을 지웁니다.
-    currentScene.choices.forEach(choice => {
-        const button = document.createElement('button');
-        button.classList.add('choice-button');
-        button.textContent = choice.text.replace(/\[주인공 이름\]/g, protagonistName); // 선택지 텍스트에도 이름 대체
-        button.onclick = () => {
-            console.log("Button clicked! Next scene:", choice.next, "Choice text:", choice.text); // 디버깅용 로그 추가
-            // onChoose 액션 실행 (자기소개 타입 설정 등)
-            if (choice.onChoose) {
-                choice.onChoose();
-            }
-            // 호감도 변경 적용
-            if (choice.favorabilityChange) {
-                for (const char in choice.favorabilityChange) {
-                    favorability[char] += choice.favorabilityChange[char];
-                    console.log(`${char} 호감도: ${favorability[char]}`); // 개발용: 호감도 변화 콘솔 출력
-                }
-                updateAffinityBars(); // 호감도 변경 시 바 업데이트
-            }
-            currentState = choice.next;
-            // 다음 씬으로 넘어가기 전에 선택지들을 페이드 아웃시키고, 완전히 사라지면 다음 씬으로 전환
-            Array.from(choicesContainer.children).forEach(button => {
-                button.style.opacity = '0';
-            });
-            setTimeout(() => {
-                choicesContainer.style.display = 'none'; // 모든 버튼이 사라지면 컨테이너 숨기기
-                updateGame(); // 다음 씬으로 넘어갈 때 saveToHistory는 기본값(true) 유지
-            }, 500); // CSS transition 시간 (0.5초)과 동일하게 설정
-        };
-        choicesContainer.appendChild(button);
-        // 버튼 생성 후 페이드 인 효과 적용 (여기서는 이미 opacity 0이므로 setTimeout으로 1로 변경)
-        setTimeout(() => {
-            button.style.opacity = '1';
-        }, 50); // 약간의 지연 후 opacity를 1로 설정하여 전환 효과 발동
-    });
-    // 모든 선택지 버튼이 추가된 후 choicesContainer를 다시 보이게 함
-    choicesContainer.style.display = 'flex'; // 선택지 버튼 컨테이너를 다시 보이게 합니다.
-    saveLatestGameStateToLocalStorage(); // 항상 최신 상태를 localStorage에 저장
-}
-
-// 초기 게임 시작 화면 설정
-function initializeGame() {
-    const gameLoaded = loadGameStateFromLocalStorage();
-
-    if (gameLoaded && protagonistName) { // 저장된 게임이 있고 주인공 이름이 있으면 바로 게임 시작 화면으로
-        nameInputContainer.style.display = 'none';
-        characterImage.style.display = 'block';
-        // dialogueBox.style.display = 'block'; // interactionContainer가 제어
-        // choicesContainer.style.display = 'flex'; // interactionContainer가 제어
-        affinityBarsContainer.style.display = 'block';
-        interactionContainer.style.display = 'flex'; // interactionContainer 보이도록 설정
-        gameContainer.style.backgroundImage = gameStory[currentState].background ? `url('assets/${gameStory[currentState].background}')` : 'none'; // 배경 이미지 적용
-        // 로드된 상태로 게임 시작 (history는 이미 loadGameStateFromLocalStorage에서 불러옴)
-        updateGame(false); // UI만 업데이트 (history에 중복 저장 방지)
-        updateAffinityBars();
-    } else { // 저장된 게임이 없거나 주인공 이름이 없으면 이름 입력 화면으로
-    nameInputContainer.style.display = 'flex';
-    characterImage.style.display = 'none';
-        // dialogueBox.style.display = 'none'; // interactionContainer가 제어
-    // choicesContainer.style.display = 'none'; // interactionContainer가 제어
-        interactionContainer.style.display = 'none'; // interactionContainer 숨기도록 설정
-        affinityBarsContainer.style.display = 'block'; // 호감도 바는 항상 보이도록
-        gameContainer.style.backgroundImage = `url('assets/backgrounds/school_gate.png')`; // 시작 화면 배경 이미지 적용 (수정)
-        // 이전에 저장된 주인공 이름이 있다면 입력 필드에 미리 채워줍니다.
-        const savedProtagonistName = localStorage.getItem('myVisualNovelGame') ? JSON.parse(localStorage.getItem('myVisualNovelGame')).protagonistName : "";
-        if (savedProtagonistName) {
-            protagonistNameInput.value = savedProtagonistName;
-        }
-        // 초기 시작 상태를 history에 저장
-        currentState = 'chapter1_scene1_new_morning_start'; // 초기 씬 설정
-        gameStateHistory = []; // history 초기화
-        saveCurrentStateToHistory(); // history에 첫 상태 추가
-    }
-    isSettingsMenuOpen = false; // 초기화 시 설정 메뉴 닫힘
-    updateBackButtonVisibility(); // 초기 버튼 가시성 설정
-}
-
-// 게임 시작 버튼 이벤트 리스너
-startGameButton.addEventListener('click', () => {
-    const name = protagonistNameInput.value.trim();
-    if (name) {
-        protagonistName = name;
-        localStorage.removeItem('myVisualNovelGame'); // 새 게임 시작 시 자동 저장 데이터만 초기화 (수정)
-        nameInputContainer.style.display = 'none';
-        characterImage.style.display = 'block'; // 게임 시작 시 캐릭터 이미지 보이기
-        // dialogueBox.style.display = 'block'; // interactionContainer가 제어
-        // choicesContainer.style.display = 'flex'; // interactionContainer가 제어
-        affinityBarsContainer.style.display = 'block'; // 게임 시작 시 호감도 바 보이기
-        interactionContainer.style.display = 'flex'; // interactionContainer 보이도록 설정
-        
-        // 게임 시작 시 history 초기화 및 첫 상태 저장
-        gameStateHistory = []; // 새로운 게임 시작 시 history 초기화
-        currentState = 'chapter1_scene1_new_morning_start'; // 첫 씬으로 설정
-        updateGame(); // 게임 시작 (자동으로 history에 첫 상태 저장)
-        updateAffinityBars();
-        // saveLatestGameStateToLocalStorage(); // updateGame에서 처리
-    } else {
-        alert("주인공 이름을 입력해주세요!");
-    }
-});
 
 // 뒤로 가기 버튼 이벤트 리스너
 backButton.addEventListener('click', goBack);
