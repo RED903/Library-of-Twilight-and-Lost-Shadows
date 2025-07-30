@@ -15,6 +15,7 @@ const saveGameButton = document.getElementById('save-game-button'); // 새로 �
 const loadGameButton = document.getElementById('load-game-button'); // 새로 추가된 요소
 const interactionContainer = document.getElementById('interaction-container'); // 새로 추가된 요소
 const startScreen = document.getElementById('start-screen'); // 새로 추가된 요소
+const fullscreenButton = document.getElementById('fullscreen-button'); // 새로 추가된 요소
 
 let protagonistName = "주인공"; // 기본값 설정
 let favorability = { ryujin: 0, hayul: 0, sea: 0, jiyu: 0, mysteryInterest: 0 }; // 캐릭터별 호감도 초기화 (teacher 제거)
@@ -226,6 +227,7 @@ function loadGame() {
 
             // initializeGame() 호출 대신 직접 UI 업데이트
             nameInputContainer.style.display = 'none';
+            startScreen.style.display = 'none'; // 게임 불러오기 시 시작 화면 숨김
             characterImage.style.display = 'block';
             // dialogueBox.style.display = 'block'; // interactionContainer가 제어
             // choicesContainer.style.display = 'flex'; // interactionContainer가 제어
@@ -1529,7 +1531,7 @@ const gameStory = {
     chapter2_end_game: {
         text: "계속하려면 코드를 입력하세요",
         character: "",
-        background: "backgrounds/player_room_night.png",
+        background: "backgrounds/twilight_archive.png",
         choices: []
     }
 };
@@ -1548,6 +1550,20 @@ saveGameButton.addEventListener('click', saveGame);
 
 // 불러오기 버튼 이벤트 리스너
 loadGameButton.addEventListener('click', loadGame);
+
+// 전체 화면 토글 함수
+function toggleFullscreen() {
+    if (document.body.classList.contains('fullscreen-active')) {
+        document.body.classList.remove('fullscreen-active');
+        fullscreenButton.textContent = '전체 화면';
+    } else {
+        document.body.classList.add('fullscreen-active');
+        fullscreenButton.textContent = '전체 화면 해제';
+    }
+}
+
+// 전체 화면 버튼 이벤트 리스너
+fullscreenButton.addEventListener('click', toggleFullscreen);
 
 // 페이지 로드 시 초기화
 initializeGame(); 
