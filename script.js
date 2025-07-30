@@ -1208,7 +1208,7 @@ const gameStory = {
         ]
     },
     chapter2_scene2_library_approach: {
-        text: "(어떤 선택지를 골랐든, 주인공은 도서관으로 향한다.)",
+        text: "(주인공은 도서관으로 향한다.)",
         character: "",
         background: "backgrounds/library.png",
         choices: [
